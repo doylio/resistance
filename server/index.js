@@ -17,6 +17,13 @@ const io = socketIO(server);
 
 io.on('connection', (client) => {
 	console.log('New user connected');
+
+	client.emit('newMessage', {
+		from: 'Admin',
+		createdAt: '7:34pm',
+		text: 'Here is a message'
+	});
+
 });
 
 
