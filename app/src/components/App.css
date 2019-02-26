@@ -71,6 +71,14 @@ html, body {
   color:#999;
 }
 
+#message-form {
+  display: flex;
+}
+
+#message-form input {
+  flex-grow: 1;
+}
+
 
 /*Desktop*/
 @media only screen and (min-width: 600px) {

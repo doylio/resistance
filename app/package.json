@@ -4,11 +4,17 @@
   "private": true,
   "dependencies": {
     "bootstrap": "^4.3.1",
+    "deparam": "^1.0.5",
+    "moment": "^2.24.0",
     "npm": "^6.8.0",
     "react": "^16.8.3",
     "react-dom": "^16.8.3",
+    "react-redux": "^6.0.1",
     "react-router-dom": "^4.3.1",
     "react-scripts": "2.1.5",
+    "redux": "^4.0.1",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^2.3.0",
     "socket.io-client": "^2.2.0"
   },
   "scripts": {

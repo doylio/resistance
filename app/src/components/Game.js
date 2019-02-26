@@ -1,39 +1,28 @@
 import React, { Component } from 'react';
+import {connect} from 'react-redux';
+import deparam from 'deparam';
+
+import socket from '../utils/api';
 import Icon from '../libs/icons/people.png';
-import openSocket from 'socket.io-client';
+import {addMessage, updatePeople} from '../redux/actions';
 import Message from './Message';
 
+
+const mapStateToProps = state => {
+    return {
+        people: state.people,
+        messages: state.messages
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        onNewMessage: (message) => dispatch(addMessage(message)),
+        onUpdatePeople: (people) => dispatch(updatePeople(people))
+    };
+}
+
 class Game extends Component {
-    constructor() {
-        super();
-        this.state = {
-            messages: []
-        }
-    }
-
-    componentWillMount() {
-        console.log(this.state.messages)
-        const socket = openSocket('http://localhost:8080');
-        socket.on('connect', function() {
-            console.log('connected');
-        });
-        socket.on('newMessage', this.pushMessageToState);
-        let {messages} = this.state;
-        let data = {
-            from: "Shawn",
-            text: "Happy Birthday",
-            createdAt: "7:35am"
-        }
-        messages.push(<Message message={data} />);
-
-    }
-
-    pushMessageToState(message) {
-        let {messages} = this.state;
-        messages.push(<Message message={message} />);
-        this.setState({messages});
-    }
-
     render() {
         const togglePeople = () => {
             const people = document.querySelector('#people');
@@ -64,15 +53,45 @@ class Game extends Component {
                 </div>
                 <div className='game__log'>
                     <ol id="messages" className="game__messages">
-                        {this.state.messages}
+                        {this.props.messages.map(data => {
+                            return <Message message={data} key={data.createdAt} />;
+                        })}
                     </ol>             
                 </div>
                 <div className='game__actions'>
-                    Actions
+                    <form id="message-form">
+                        <input name="message" type="text" placeholder="Message" autoFocus autoComplete="off" />
+                        <button onClick={this.onSendMessageButton}>Send</button>
+                    </form>
                 </div>
             </div>
         );
     }
+
+    componentDidMount() {
+        socket.on('connect', function() {
+            let params = deparam(window.location.search);
+            socket.emit('join', params, function(err) {
+                if(err) {
+                    alert(err);
+                    window.location.href = '/';
+                }
+            });
+        });
+        socket.on('newMessage', (message) => {
+            this.props.onNewMessage(message);
+        });
+    }
+
+    onSendMessageButton(e) {
+        e.preventDefault();
+        let messageBox = document.querySelector('[name=message]');
+        socket.emit('createMessage', {
+            text: messageBox.value
+        }, () => {
+            messageBox.value = '';
+        });
+    }
 }
 
-export default Game;
+export default connect(mapStateToProps, mapDispatchToProps)(Game);

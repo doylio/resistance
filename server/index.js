@@ -4,7 +4,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 
 //Local
-
+const {generateMessage} = require('./utils/message');
 
 //Server configuration
 const app = express();
@@ -15,15 +15,20 @@ const io = socketIO(server);
 //Middleware
 
 
-io.on('connection', (client) => {
+io.on('connection', socket => {
 	console.log('New user connected');
 
-	client.emit('newMessage', {
-		from: 'Admin',
-		createdAt: '7:34pm',
-		text: 'Here is a message'
+	socket.emit('newMessage', generateMessage('Admin', 'Welcome to the game'));
+
+	socket.on('createMessage', (message, cb) => {
+		io.emit('newMessage', generateMessage('User', message.text));
+		cb();
 	});
 
+	socket.on('join', (data, cb) => {
+		
+		
+	});
 });
 
 
