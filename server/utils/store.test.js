@@ -214,6 +214,21 @@ describe('store.initGame(room)', () => {
     });
 });
 
+describe('store.nameInUse(name, room)', () => {
+    it('should return true', () => {
+        let name = 'Colin';
+        let room = 'A';
+        let check = store.nameInUse(name, room);
+        expect(check).toBe(true);
+    });
+    it('should return false', () => {
+        let name = 'Colin';
+        let room = 'B';
+        let check = store.nameInUse(name, room);
+        expect(check).toBe(false);
+    });
+})
+
 describe('store.removeUser(id)', () => {
     it('should not remove a user', () => {
         let id = '77';

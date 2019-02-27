@@ -52,18 +52,18 @@ io.on('connection', socket => {
 		if(!isRealString(data.name) || !isRealString(data.room)) {
 			return cb('Name and room are required');
 		}
+		let game = store.getGame(data.room);
+		if(!game) {
+			game = store.addGame(data.room);
+		}
 
-		if(store.getUserByName(data.name)) {
+		if(store.nameInUse(data.name, data.room)) {
 			return cb('That username is already taken');
 		}
 
 		socket.join(data.room);
 		store.removeUser(socket.id);
 		store.addUser(socket.id, data.name, data.room);
-		let game = store.getGame(data.room);
-		if(!game) {
-			game = store.addGame(data.room);
-		}
 		socket.emit('updatePhase', game.phase);
 		
 		io.to(data.room).emit('updateUserList', store.getUserList(data.room));

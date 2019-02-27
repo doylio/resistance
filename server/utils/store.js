@@ -56,6 +56,11 @@ class Store {
         return allUsers.find(user => user.id === id);
     }
 
+    nameInUse(name, room) {
+        let users = this.getUserList(room);
+        return users.reduce((check, user) => user.name === name || check, false);
+    }
+
     getGameByUser(id) {
         let userGame = undefined;
         this.games.forEach(game => {
