@@ -1,3 +1,4 @@
 export const UPDATE_PEOPLE = 'UPDATE_PEOPLE';
-
 export const ADD_NEW_MESSAGE = 'ADD_NEW_MESSAGE';
+export const UPDATE_PHASE = 'UPDATE_PHASE';
+export const TOGGLE_READY = 'TOGGLE_READY';

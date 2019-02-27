@@ -14,8 +14,8 @@ class Home extends Component {
                             <input type="text" name="name" autoFocus autoComplete="off" />
                         </div>
                         <div className="form-field">
-                            <label htmlFor="game">Game name</label>
-                            <input type="text" name="game" autoComplete="off"/>
+                            <label htmlFor="room">Game name</label>
+                            <input type="text" name="room" autoComplete="off"/>
                         </div>
                         <div className="form-field">
                             <button className='btn btn-warning'>Join</button>

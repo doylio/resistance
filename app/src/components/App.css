@@ -32,9 +32,7 @@ html, body {
   width: 100%;
 }
 
-.game__actions {
-  background: #222;
-}
+
 
 .game__sidebar li {
   background: white;
