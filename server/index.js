@@ -4,7 +4,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 
 //Local
-const {generateMessage} = require('./utils/message');
+const {generateMessage, generateSpyList} = require('./utils/message');
 const {isRealString} = require('./utils/validation');
 const {Store} = require('./utils/store');
 
@@ -32,6 +32,19 @@ io.on('connection', socket => {
 		let user = store.getUser(socket.id);
 		user.ready = ready;
 		io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} is ${ready ? 'ready' : 'not ready'}.`));
+		if(store.readyCheck(user.room)) {
+			let game = store.initGame(user.room);
+			io.to(user.room).emit('updatePhase', game.phase);
+			let spies = store.getSpies(user.room);
+			spies.forEach((spy) => {
+				let list = generateSpyList(spies, spy);
+				io.sockets.socket[spy.id].emit('newMessage', generateMessage('Admin', `You are a spy.  Your teammates are ${list}.  Keep this information hidden and don't let anyone discover your identity.`));
+			});
+			let resistance = store.getResistance(user.room);
+			resistance.forEach(resistance => {
+				io.sockets.socket[resistance.id].emit('newMessage', generateMessage('Admin', `You are a member of the Resistance.  You should discover who the ${spies.length} spies are.  Anyone could be a traitor.`));
+			});
+		}
 		cb();
 	});
 
@@ -48,6 +61,9 @@ io.on('connection', socket => {
 		store.removeUser(socket.id);
 		store.addUser(socket.id, data.name, data.room);
 		let game = store.getGame(data.room);
+		if(!game) {
+			game = store.addGame(data.room);
+		}
 		socket.emit('updatePhase', game.phase);
 		
 		io.to(data.room).emit('updateUserList', store.getUserList(data.room));
