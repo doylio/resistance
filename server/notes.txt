@@ -1,0 +1,11 @@
+Client side game info:
+{
+    room: 'A',
+    players: ['Mike', 'Shawn', 'Colin'],
+    phase: 0,
+    score: {
+        r: 0,
+        s: 0
+    },
+    playersToChoose: 0,
+}

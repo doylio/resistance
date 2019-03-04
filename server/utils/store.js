@@ -1,24 +1,77 @@
 const {shuffle} = require('./shuffle');
 
+class Game {
+    constructor(room) {
+        this.room = room;
+        this.players = [];
+        this.score = [0, 0];
+        this.leader = 0;
+        this.team = [];
+        this.votes = [0, 0];
+    }
+
+    nameInUse(name) {
+        return this.players.reduce((check, user) => user.name === name || check, false);
+    }
+
+    getPlayerListClean() {
+        return this.players.map(user => ({
+            name: user.name,
+            id: user.id,
+            actionPending: user.actionPending
+        }));
+    }
+
+    actionCheck() {
+        return this.players.reduce((check, user) => {
+            return user.actionPending && check;
+        }, true);
+    }
+
+    init() {
+        this.players = shuffle(this.players);
+        const numberOfSpies = Math.ceil(this.players.length / 3);
+        for(let i = 0; i < numberOfSpies; i++) {
+            this.players[i].role = 's';
+        }
+        this.players = shuffle(this.players);
+        this.leader = Math.floor(Math.random() * this.players.length);
+        this.mission = 0;
+        return game;
+    }
+
+    getSpies() {
+        return this.players.filter(user => user.role === 's');
+    }
+
+    getResistance() {
+        return this.players.filter(user => user.role === 'r');
+    }
+
+
+}
+
+class User {
+    constructor(id, name, room, socket) {
+        this.id = id;
+        this.name = name;
+        this.room = room;
+        this.role = 'r';
+        this.socket = socket;
+        this.action = null,
+        this.actionPending = false;
+    }
+}
+
+
 class Store {
     constructor() {
         this.games = [];
+        this.users = [];
     }
 
     addGame(room) {
-        let game = {
-            room,
-            players: [],
-            phase: 'setup',
-            score: {
-                resistance: 0,
-                spies: 0,
-            },
-            leader: 0,
-            proposedTeam: [],
-            currentYesVotes: 0,
-            currentVotes: 0,
-        };
+        let game = new Game(room);
         this.games.push(game);
         return game;
     }
@@ -33,60 +86,34 @@ class Store {
         return removedGame;
     }
 
-    addUser(id, name, room) {
+    addUser(id, name, room, socket) {
+        let user = new User(id, name, room, socket);
         let game = this.getGame(room);
-        let user = {id, name, role: 'R'};
+        if(!game) {
+            game = this.addGame(room);
+        }
+        user.game = game;
+        this.users.push(user);
         game.players.push(user);
         return user;
     }
 
 
     removeUser(id) {
-        let game = this.getGameByUser(id);
-        if(!game) {
-            return undefined;
+        let user = this.getUser(id);
+        user.game.players = user.game.players.filter(player => player.id !== id);
+        if(user.game.players.length === 0) {
+            this.removeGame(user.room);
         }
-        let user = game.players.find(player => player.id === id);
-        game.players = game.players.filter(player => player.id !== id);
+        this.users = this.users.filter(user => user.id !== id);
         return user;
     }
 
     getUser(id) {
-        let allUsers = this.games.reduce((userArr, game) => userArr.concat(game.players), []);
-        return allUsers.find(user => user.id === id);
+        let user = this.users.find(user => user.id === id);
+        return user;
     }
 
-    nameInUse(name, room) {
-        let users = this.getUserList(room);
-        return users.reduce((check, user) => user.name === name || check, false);
-    }
-
-    getGameByUser(id) {
-        let userGame = undefined;
-        this.games.forEach(game => {
-            game.players.forEach(player => {
-                if(player.id === id) {
-                    userGame = game;
-                }
-            })
-        });
-        return userGame;
-    }
-
-    getUserList(room) {
-        return this.getGame(room).players;
-    }
-
-    readyCheck(room) {
-        let players = this.getUserList(room);
-        return players.reduce((ready, user) => {
-            if(user.ready) {
-                return ready;
-            } else {
-                return false;
-            }
-        }, true);
-    }
 
     initGame(room) {
         let game = this.getGame(room);
@@ -98,6 +125,7 @@ class Store {
         game.players = shuffle(game.players);
         game.leader = Math.floor(Math.random() * game.players.length);
         game.phase = 'mission-select';
+        game.mission = 0;
         return game;
     }
 
