@@ -1,8 +1,8 @@
 const expect = require('expect');
 
-let {generateMessage, generateSpyList} = require('./message');
+let {generateMessage, generateSpyList, generateList} = require('./message');
 
-describe('generateMessage', () => {
+describe('generateMessage(from, text)', () => {
     it('should generate the correct message object', () => {
         let from = "Luke Skywalker";
         let text = "That's not true.  That's impossible!";
@@ -12,7 +12,7 @@ describe('generateMessage', () => {
     });
 });
 
-describe('generateSpyList', () => {
+describe('generateSpyList(arr, recipient)', () => {
     it('should generate the correct spy list', () => {
         let spies = [{
             id: '1',
@@ -54,5 +54,18 @@ describe('generateSpyList', () => {
         let string = generateSpyList(spies, user);
         expect(typeof string).toBe('string');
         expect(string).toBe('Eric, Devin and Shawn');
+    });
+});
+
+describe('generateList(arr)', () => {
+    it('should return the correct list', () => {
+        let list = ['Moe', 'Curly', 'Larry'];
+        let result = generateList(list);
+        expect(result).toBe('Larry, Curly and Moe');
+    });
+    it('should return the correct list', () => {
+        let list = ['Costello', 'Abbott'];
+        let result = generateList(list);
+        expect(result).toBe('Abbott and Costello');
     });
 });

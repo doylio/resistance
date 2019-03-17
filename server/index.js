@@ -29,7 +29,15 @@ io.on('connection', socket => {
 		}
 		let game = store.getGame(data.room);
 		if(game && game.nameInUse(data.name)) {
-			return cb('That username is already taken');
+			let namedUser = game.players.find(user => user.name === data.name);
+			if(namedUser.socket.disconnected) {
+				namedUser.socket = socket;
+				namedUser.id = socket.id;
+				io.to(game.room).emit('newMessage', generateMessage('Admin', `${data.name} has reconnected.`));
+				return cb();
+			} else {
+				return cb('That username is already taken');
+			}
 		}
 		//Update store
 		let user = store.addUser(socket.id, data.name, data.room, socket);
@@ -242,9 +250,18 @@ io.on('connection', socket => {
 		}
 	});
 
-	socket.on('disconnection', () => {
-		//TODO
-	})
+	socket.on('disconnect', () => {
+		//Five minutes to reconnect
+		let user = store.getUser(socket.id);
+		if(!user) {
+			return;
+		}
+		io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has disconnected.  They have five minutes to reconnect.`));
+		setTimeout(() => {
+			let user = store.removeUser(socket.id);
+			io.to(user.room).emit('update', {userList: user.game.getPlayerListClean()});
+		}, 300000);
+	});
 
 	socket.on('store', () => {
 		socket.emit('storeUpdate', store);

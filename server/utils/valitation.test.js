@@ -2,7 +2,7 @@ const expect = require('expect');
 
 const {isRealString} = require('./validation');
 
-describe('isRealString', () => {
+describe('isRealString(str)', () => {
     it('should reject non-string values', () => {
         let str = 8;
         let valid = isRealString(str);

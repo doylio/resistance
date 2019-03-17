@@ -3,127 +3,141 @@ let testGames = [{
     players: [{
         id: '1',
         name: 'Shawn',
-        role: 'R',
-        ready: true
+        role: 'r',
+        action: 'ready'
     }, {
         id: '2',
         name: 'Colin',
-        role: 'R',
-        ready: false,
+        role: 'r',
+        action: null,
     }, {
         id: '3',
         name: 'Eric',
-        role: 'R',
-        ready: true,
+        role: 'r',
+        action: null,
     }, {
         id: '4',
         name: 'Devin',
-        role: 'R',
-        ready: false,
+        role: 'r',
+        action: null,
     }, {
         id: '5',
         name: 'Cameron',
-        role: 'R',
-        ready: false
+        role: 'r',
+        action: null
     }],
-    phase: 'setup',
-    score: {
-        resistance: 0,
-        spies: 0,
-    },
+    score: [0, 0],
     leader: 0,
-    proposedTeam: [],
-    currentYesVotes: 0,
-    currentVotes: 0,
+    team: [],
+    yesVotes: [],
+    noVotes: [],
+    missionResults: [],
+    missionNumber: 0,
 }, {
     room: 'B',
     players: [{
         id: '6',
         name: 'Aragorn',
-        role: 'R',
-        ready: true
+        role: 'r',
+        action: null
     }, {
         id: '7',
         name: 'Legolas',
-        role: 'R',
-        ready: true
+        role: 'r',
+        action: null
     }, {
         id: '8',
         name: 'Gimli',
-        role: 'S',
-        ready: true
+        role: 's',
+        action: null
     }, {
         id: '9',
         name: 'Merry',
-        role: 'R',
-        ready: true
+        role: 'r',
+        action: null
     }, {
         id: '10',
         name: 'Pippin',
-        role: 'S',
-        ready: true
+        role: 's',
+        action: null
     }, {
         id: '11',
         name: 'Gandalf',
-        role: 'R',
-        ready: true
+        role: 'r',
+        action: null
     }],
-    phase: 'mission-select',
-    score: {
-        resistance: 0,
-        spies: 0,
-    },
+    score: [0, 0],
     leader: 3,
-    proposedTeam: [],
-    currentYesVotes: 0,
-    currentVotes: 0,
+    team: [],
+    yesVotes: [],
+    noVotes: [],
+    missionResults: [3, 1],
+    missionNumber: 2,
 }, {
     room: 'C',
     players: [{
         id: '12',
         name: 'Harry',
-        role: 'S',
-        ready: true
+        role: 's',
+        action: 'vote'
     }, {
         id: '13',
         name: 'Ron',
-        role: 'S',
-        ready: true
+        role: 's',
+        action: 'vote'
     }, {
         id: '14',
         name: 'Hermione',
-        role: 'R',
-        ready: true
+        role: 'r',
+        action: 'vote'
     }, {
         id: '15',
         name: 'Ginny',
-        role: 'S',
-        ready: true
+        role: 's',
+        action: 'vote'
     }, {
         id: '16',
         name: 'Luna',
-        role: 'R',
-        ready: true
+        role: 'r',
+        action: 'vote'
     }, {
         id: '17',
         name: 'Cho',
-        role: 'R',
-        ready: true
+        role: 'r',
+        action: 'vote'
     }, {
         id: '18',
         name: 'Neville',
-        role: 'R',
-        ready: true
-    }, ],
-    phase: 'mission-vote',
-    score: {
-        resistance: 0,
-        spies: 0,
-    },
-    leader: 0,
-    proposedTeam: ['14', '16', '17'],
-    currentYesVotes: 0,
-    currentVotes: 0,
+        role: 'r',
+        action: 'vote'
+    }],
+    score: [1, 0],
+    leader: 3,
+    team: [{
+        id: '12',
+        name: 'Harry',
+        role: 's',
+        action: 'vote'
+    }, {
+        id: '13',
+        name: 'Ron',
+        role: 's',
+        action: 'vote'
+    }, {
+        id: '14',
+        name: 'Hermione',
+        role: 'r',
+        action: 'vote'
+    }],
+    yesVotes: [],
+    noVotes: [],
+    missionResults: [],
+    missionNumber: 1,
 }];
 
-module.exports = {testGames};
+let testPlayers = [];
+testGames.forEach(game => {
+    testPlayers = testPlayers.concat(game.players);
+});
+
+module.exports = {testGames, testPlayers};
