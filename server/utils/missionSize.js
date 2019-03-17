@@ -10,4 +10,8 @@ const missionSize = (numberOfPlayers, missionNumber) => {
     return table[numberOfPlayers][missionNumber];
 }
 
-module.exports = {missionSize};
+const doubleMission = (numberOfPlayers, missionNumber) => {
+    return numberOfPlayers > 6 && missionNumber === 3;
+}
+
+module.exports = {missionSize, doubleMission};

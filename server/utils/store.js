@@ -7,7 +7,10 @@ class Game {
         this.score = [0, 0];
         this.leader = 0;
         this.team = [];
-        this.votes = [0, 0];
+        this.yesVotes = [];
+        this.noVotes = [];
+        this.missionResults = [0, 0];
+        this.missionNumber = 0;
     }
 
     nameInUse(name) {
@@ -18,13 +21,13 @@ class Game {
         return this.players.map(user => ({
             name: user.name,
             id: user.id,
-            actionPending: user.actionPending
+            action: user.action,
         }));
     }
 
-    actionCheck() {
+    noPendingActions() {
         return this.players.reduce((check, user) => {
-            return user.actionPending && check;
+            return (user.action === null) && check;
         }, true);
     }
 
@@ -36,8 +39,8 @@ class Game {
         }
         this.players = shuffle(this.players);
         this.leader = Math.floor(Math.random() * this.players.length);
-        this.mission = 0;
-        return game;
+        this.missionNumber = 0;
+        return this;
     }
 
     getSpies() {
@@ -48,6 +51,29 @@ class Game {
         return this.players.filter(user => user.role === 'r');
     }
 
+    checkTeamSelect(team) {
+        let ids = this.players.map(user => user.id);
+        let idCheck = team.reduce(((check, user) => ids.includes(user) && check), true);
+        team.sort();
+        let doublesCheck = true;
+        for(let i = 0; i < team.length - 1; i++) {
+            doublesCheck = doublesCheck && team[i] !== team[i + 1];
+        }
+        return idCheck && doublesCheck;
+    }
+    reset() {
+        this.score = [0, 0];
+        this.leader = 0;
+        this.team = [];
+        this.yesVotes = [];
+        this.noVotes = [];
+        this.missionResults = [0, 0];
+        this.missionNumber = 0;
+        this.players.forEach(user => {
+            user.role = 'r';
+            user.action = 'ready';
+        });
+    }
 
 }
 
@@ -58,8 +84,7 @@ class User {
         this.room = room;
         this.role = 'r';
         this.socket = socket;
-        this.action = null,
-        this.actionPending = false;
+        this.action = 'ready';
     }
 }
 
@@ -112,31 +137,6 @@ class Store {
     getUser(id) {
         let user = this.users.find(user => user.id === id);
         return user;
-    }
-
-
-    initGame(room) {
-        let game = this.getGame(room);
-        game.players = shuffle(game.players);
-        const numberOfSpies = Math.ceil(game.players.length / 3);
-        for(let i = 0; i < numberOfSpies; i++) {
-            game.players[i].role = 'S';
-        }
-        game.players = shuffle(game.players);
-        game.leader = Math.floor(Math.random() * game.players.length);
-        game.phase = 'mission-select';
-        game.mission = 0;
-        return game;
-    }
-
-    getSpies(room) {
-        let game = this.getGame(room);
-        return game.players.filter(user => user.role === 'S');
-    }
-
-    getResistance(room) {
-        let game = this.getGame(room);
-        return game.players.filter(user => user.role === 'R');
     }
 }
 

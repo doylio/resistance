@@ -33,6 +33,7 @@ const generateList = (arr) => {
             str += ', ';
         }
     }
+    str += arr[0];
     return str;
 }
 
