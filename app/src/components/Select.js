@@ -30,7 +30,8 @@ class Select extends Component {
             }
         });
         return (
-            <div className='p-4'>
+            <div className='p-2'>
+                <p className='text-light m-0'>Select {teamSize} players to go on the mission</p>
                 <div className='d-flex flex-row flex-wrap'>
                     {playerButtons}
                 </div>

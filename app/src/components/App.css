@@ -73,6 +73,10 @@ html, body {
   color:#999;
 }
 
+.message__body {
+  white-space: pre-line;
+}
+
 #message-form {
   display: flex;
 }

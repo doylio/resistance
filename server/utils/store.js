@@ -11,6 +11,7 @@ class Game {
         this.noVotes = [];
         this.missionResults = [0, 0];
         this.missionNumber = 0;
+        this.inProgress = false;
     }
 
     nameInUse(name) {
@@ -40,6 +41,7 @@ class Game {
         this.players = shuffle(this.players);
         this.leader = Math.floor(Math.random() * this.players.length);
         this.missionNumber = 0;
+        this.inProgress = true;
         return this;
     }
 
@@ -73,6 +75,7 @@ class Game {
             user.role = 'r';
             user.action = 'ready';
         });
+        this.inProgress = false;
     }
 
 }

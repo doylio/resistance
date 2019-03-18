@@ -18,7 +18,7 @@
   "bugs": {
     "url": "https://github.com/shawndoyle/resistance-server/issues"
   },
-  "homepage": "https://github.com/shawndoyle/resistance-server#readme",
+  "homepage": "http://www.shawnrobertdoyle.com/p/resistance",
   "dependencies": {
     "express": "^4.16.4",
     "socket.io": "^2.2.0",

@@ -12,13 +12,10 @@ const {missionSize, doubleMission} = require('./utils/missionSize');
 
 //Init
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 2323;
 const server = http.createServer(app);
 const io = socketIO(server);
 const store = new Store();
-
-//Middleware
-app.use(express.static(__dirname + '/test'))
 
 
 io.on('connection', socket => {
@@ -31,16 +28,22 @@ io.on('connection', socket => {
 			return cb('Name is too long.');
 		}
 		let game = store.getGame(data.room);
+		if(data.name === 'Admin' || data.name === 'Game') {
+			return cb('That username is reserved');
+		}
 		if(game && game.nameInUse(data.name)) {
 			let namedUser = game.players.find(user => user.name === data.name);
 			if(namedUser.socket.disconnected) {
 				namedUser.socket = socket;
 				namedUser.id = socket.id;
-				io.to(game.room).emit('newMessage', generateMessage('Admin', `${data.name} has reconnected.`));
+				io.to(game.room).emit('newMessage', generateMessage('Game', `${data.name} has reconnected.`));
 				return cb();
 			} else {
 				return cb('That username is already taken');
 			}
+		}
+		if(game && game.inProgress) {
+			return cb('This game has already started.  You may join after it finishes.');
 		}
 		//Update store
 		let user = store.addUser(socket.id, data.name, data.room, socket);
@@ -50,7 +53,7 @@ io.on('connection', socket => {
 		socket.emit('newMessage', generateMessage('Admin', "Welcome to the game!"));
 		let {name, id} = user;
 		socket.emit('userData', {name, id});
-		socket.broadcast.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has joined the game`));
+		socket.broadcast.to(user.room).emit('newMessage', generateMessage('Game', `${user.name} has joined the game`));
 		cb(undefined, {name, id});
 	});
 
@@ -74,7 +77,7 @@ io.on('connection', socket => {
 		//Update store
 		user.action = null;
 		//Update client
-		io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} is ready.`));
+		io.to(user.room).emit('newMessage', generateMessage('Game', `${user.name} is ready.`));
 		let {game} = user;
 		io.to(game.room).emit('update', {userList: game.getPlayerListClean()});
 		//Check game status
@@ -94,7 +97,7 @@ io.on('connection', socket => {
 				let playersToChoose = missionSize(game.players.length, game.missionNumber);
 				leader.action = 'choose-' + playersToChoose;
 				io.to(game.room).emit('update', {userList: game.getPlayerListClean()});
-				leader.socket.emit('newMessage', generateMessage('Admin', `You are the team leader.  You must choose a team of ${playersToChoose} to go on a mission.`));
+				// leader.socket.emit('newMessage', generateMessage('Admin', `You are the team leader.  You must choose a team of ${playersToChoose} to go on a mission.`));
 				leader.socket.broadcast.to(game.room).emit('newMessage', generateMessage('Admin', `${game.players[game.leader].name} is the team leader.  He/she will select a team of ${playersToChoose}.`));
 			} else {
 				io.to(game.room).emit('newMessage', generateMessage('Admin', 'The game requires 5-10 players to play.'));
@@ -128,7 +131,7 @@ io.on('connection', socket => {
 		game.votes = [0, 0];
 		//Update clients
 		let teamNames = team.map(id => store.getUser(id).name);
-		io.to(game.room).emit('newMessage', generateMessage('Admin', `${leader.name} has selected ${generateList(teamNames)} to go on this mission.  Please cast your vote in favour of or against this mission.`));
+		io.to(game.room).emit('newMessage', generateMessage('Admin', `${leader.name} has selected ${generateList(teamNames)} to go on this mission.`));
 		io.to(game.room).emit('update', {userList: game.getPlayerListClean()});
 	});
 
@@ -165,18 +168,17 @@ io.on('connection', socket => {
 				//Update clients
 				io.to(game.room).emit('newMessage', generateMessage('Admin', `Vote failed.  Moving to next team leader.`));
 				io.to(game.room).emit('update', {userList: game.getPlayerListClean()});
-				leader.socket.emit('newMessage', generateMessage('Admin', `You are the team leader.  You must choose a team of ${playersToChoose} to go on a mission.`));
+				// leader.socket.emit('newMessage', generateMessage('Admin', `You are the team leader.  You must choose a team of ${playersToChoose} to go on a mission.`));
 				leader.socket.broadcast.to(game.room).emit('newMessage', generateMessage('Admin', `${game.players[game.leader].name} is the team leader.  He/she will select a team of ${playersToChoose}.`));
 			} else {
 				//Vote passed
 				if(doubleMission(game.players.length, game.missionNumber)) {
-					io.to(game.room).emit('newMessage', generateMessage('Admin', 'Vote passed.  The mission will progress.  Each player on the mission will be given a choice to "Assist" or "Sabotage" the mission.  Resistance members cannot sabotage, both buttons will assist.  Spies may sabotage or assist the mission.\n\nNOTE:  Special mission!  Two sabotages are required to fail this mission.'));
+					io.to(game.room).emit('newMessage', generateMessage('Admin', 'Vote passed.  The mission will progress.\n\nNOTE:  Special mission!  Two sabotages are required to fail this mission.'));
 				} else {
-					io.to(game.room).emit('newMessage', generateMessage('Admin', 'Vote passed.  The mission will progress.  Each player on the mission will be given a choice to "Assist" or "Sabotage" the mission.  Resistance members cannot sabotage, both buttons will assist.  Spies may sabotage or assist the mission.\n\nOne sabotage will fail this mission.'));
+					io.to(game.room).emit('newMessage', generateMessage('Admin', 'Vote passed.  The mission will progress.\n\nOne sabotage will fail this mission.'));
 				}
 				game.team.forEach(player => {
 					player.action = 'mission';
-					player.socket.emit('newMessage', generateMessage('Admin', 'You are on the mission.  Please make your selection.'));
 				});
 				io.to(game.room).emit('update', {userList: game.getPlayerListClean()});
 			}
@@ -209,9 +211,11 @@ io.on('connection', socket => {
 				//Sabotaged
 				game.score[1]++;
 				io.to(game.room).emit('newMessage', generateMessage('Admin', `The mission was sabotaged by ${game.missionResults[1]} player${game.missionResults[1] < 1 ? 's' : ''}.`));
+				io.to(game.room).emit('missionResult', false);
 			} else {
 				//Successful
 				game.score[0]++;
+				io.to(game.room).emit('missionResult', true);
 				if(game.missionResults[1] === 1){
 					io.to(game.room).emit('newMessage', generateMessage('Admin', 'Mission succeeded!  There was only one saboteur on the mission, so they failed to sabotage.'))
 				} else {
@@ -219,7 +223,7 @@ io.on('connection', socket => {
 				}
 			}
 			//Display score
-			io.to(game.room).emit('newMessage', generateMessage('Admin', `SCORE:\nResistance:  ${game.score[0]}/nSpies:  ${game.score[1]}`));
+			io.to(game.room).emit('newMessage', generateMessage('Admin', `SCORE:\nResistance:  ${game.score[0]}\nSpies:  ${game.score[1]}`));
 			//Check for win
 			if(game.score[0] === 3 || game.score[1] === 3) {
 				let spyList = generateList(game.getSpies().map(user => user.name));
@@ -232,7 +236,7 @@ io.on('connection', socket => {
 				}
 				game.reset();
 				io.to(game.room).emit('update', {userList: game.getPlayerListClean()});
-				io.to(game.room).emit('newMessage', generateMessage('Admin', 'Ready up to play again'));
+				io.to(game.room).emit('newMessage', generateMessage('Game', 'Ready up to play again'));
 			} else {
 				//Continue game
 				game.missionNumber++;
@@ -246,7 +250,7 @@ io.on('connection', socket => {
 				leader.action = 'choose-' + playersToChoose;
 				//Update clients
 				io.to(game.room).emit('update', {userList: game.getPlayerListClean()});
-				leader.socket.emit('newMessage', generateMessage('Admin', `You are the team leader.  You must choose a team of ${playersToChoose} to go on a mission.`));
+				// leader.socket.emit('newMessage', generateMessage('Admin', `You are the team leader.  You must choose a team of ${playersToChoose} to go on a mission.`));
 				leader.socket.broadcast.to(game.room).emit('newMessage', generateMessage('Admin', `${game.players[game.leader].name} is the team leader.  He/she will select a team of ${playersToChoose}.`));
 				if(doubleMission(game.players.length, game.missionNumber)) {
 					io.to(game.room).emit('newMessage', generateMessage('Admin', '**NOTE** This is a special mission.  There must be two sabotages on this mission for the spies to get the point!'));
@@ -261,7 +265,7 @@ io.on('connection', socket => {
 		if(!user) {
 			return;
 		}
-		io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has disconnected.  They have five minutes to reconnect.`));
+		io.to(user.room).emit('newMessage', generateMessage('Game', `${user.name} has disconnected.  They have five minutes to reconnect.`));
 		setTimeout(() => {
 			let user = store.removeUser(socket.id);
 			if(user) {
@@ -269,10 +273,7 @@ io.on('connection', socket => {
 			}
 		}, 300000);
 	});
-
 });
 
 
 server.listen(port, () => console.log(`Server lisening on port ${port}`));
-
-module.exports = {app};

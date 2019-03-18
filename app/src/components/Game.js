@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {connect} from 'react-redux';
 import deparam from 'deparam';
+import Modal from 'react-responsive-modal';
 
 import socket from '../utils/api';
 import Icon from '../libs/icons/people.png';
@@ -8,6 +9,8 @@ import {addMessage, updatePeople} from '../redux/actions';
 import Message from './Message';
 import Setup from './Setup';
 import Select from './Select';
+import Vote from './Vote';
+import Mission from './Mission';
 
 
 const mapStateToProps = state => {
@@ -26,6 +29,13 @@ const mapDispatchToProps = dispatch => {
 }
 
 class Game extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            open: false,
+            result: undefined
+        };
+    }
     render() {
         const togglePeople = () => {
             const people = document.querySelector('#people');
@@ -40,15 +50,22 @@ class Game extends Component {
             switch(action) {
                 case 'ready':
                     return <Setup />;
-                    break;
                 case 'choose-2':
                 case 'choose-3':
                 case 'choose-4':
                 case 'choose-5':
                     return <Select />;
+                case 'vote':
+                    return <Vote />;
+                case 'mission':
+                    return <Mission />;
                 default:
                     return <div></div>;
             }
+        }
+
+        let modalStyle = {
+            modal:  this.state.result ? 'bg-primary p-4 rounded' : 'bg-danger p-4 rounded'
         }
         
         return (
@@ -79,6 +96,9 @@ class Game extends Component {
                     </form>
                     {ActionsUI(this.props.action)}
                 </div>
+                <Modal classNames={modalStyle} open={this.state.open} onClose={this.onCloseModal} center >
+                    <h2>{this.state.result ? 'Success!' : 'Sabotaged!'}</h2>
+                </Modal>
             </div>
         );
     }
@@ -101,6 +121,12 @@ class Game extends Component {
         });
         socket.on('update', data => {
             this.props.onUpdatePeople(data.userList);
+        });
+        socket.on('missionResult', result => {
+            this.setState({
+                open: true,
+                result
+            });
         });
 
 
@@ -133,6 +159,10 @@ class Game extends Component {
         }, () => {
             messageBox.value = '';
         });
+    }
+
+    onCloseModal = () => {
+        this.setState({open: false});
     }
 }
 
