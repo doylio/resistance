@@ -1,10 +1,11 @@
-import {ADD_NEW_MESSAGE, UPDATE_PEOPLE, UPDATE_PHASE, TOGGLE_READY} from './constants';
+import {ADD_NEW_MESSAGE, UPDATE_PEOPLE, SAVE_SELF} from './constants';
+import socket from '../utils/api';
 
 const initialGameState = {
     people: [],
     messages: [],
-    phase: '',
-    ready: false
+    act: null,
+    self: {},
 };
 
 export const gameReducer = (state=initialGameState, action={}) => {
@@ -12,11 +13,10 @@ export const gameReducer = (state=initialGameState, action={}) => {
         case ADD_NEW_MESSAGE:
             return Object.assign({}, state, {messages: state.messages.concat([action.payload])});
         case UPDATE_PEOPLE:
-            return Object.assign({}, state, {people: action.payload});
-        case UPDATE_PHASE:
-            return Object.assign({}, state, {phase: action.payload});
-        case TOGGLE_READY:
-            return Object.assign({}, state, {ready: !state.ready});
+            let gameAction = action.payload.find(user => user.id === socket.id).action;
+            return Object.assign({}, state, {people: action.payload, act: gameAction});
+        case SAVE_SELF:
+            return Object.assign({}, state, {self: action.payload});
         default:
             return state;
     }

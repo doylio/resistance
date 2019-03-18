@@ -126,6 +126,9 @@ class Store {
 
     removeUser(id) {
         let user = this.getUser(id);
+        if(!user) {
+            return;
+        }
         user.game.players = user.game.players.filter(player => player.id !== id);
         if(user.game.players.length === 0) {
             this.removeGame(user.room);

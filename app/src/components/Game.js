@@ -4,16 +4,17 @@ import deparam from 'deparam';
 
 import socket from '../utils/api';
 import Icon from '../libs/icons/people.png';
-import {addMessage, updatePeople, updatePhase} from '../redux/actions';
+import {addMessage, updatePeople} from '../redux/actions';
 import Message from './Message';
 import Setup from './Setup';
+import Select from './Select';
 
 
 const mapStateToProps = state => {
     return {
         people: state.people,
         messages: state.messages,
-        phase: state.phase
+        action: state.act
     }
 }
 
@@ -21,7 +22,6 @@ const mapDispatchToProps = dispatch => {
     return {
         onNewMessage: (message) => dispatch(addMessage(message)),
         onUpdatePeople: (people) => dispatch(updatePeople(people)),
-        onUpdatePhase: (phase) => dispatch(updatePhase(phase))
     };
 }
 
@@ -36,10 +36,16 @@ class Game extends Component {
             }
         }
 
-        let ActionsUI = (phase) => {
-            switch(phase) {
-                case 'setup':
+        let ActionsUI = (action) => {
+            switch(action) {
+                case 'ready':
                     return <Setup />;
+                    break;
+                case 'choose-2':
+                case 'choose-3':
+                case 'choose-4':
+                case 'choose-5':
+                    return <Select />;
                 default:
                     return <div></div>;
             }
@@ -55,7 +61,7 @@ class Game extends Component {
                         <h3 className='text-center text-light pt-2'>Game</h3>
                     </div>
                     <ul id='people'>
-                        {this.props.people.map(user => <li key={user}>{user}</li>)}
+                        {this.props.people.map(user => <li key={user.id} className={user.action === null ? 'grey' : ''}>{user.name}</li>)}
                     </ul>
                     
                 </div>
@@ -71,7 +77,7 @@ class Game extends Component {
                         <input name="message" type="text" placeholder="Message" autoFocus autoComplete="off" />
                         <button className='btn btn-primary' onClick={this.onSendMessageButton}>Send</button>
                     </form>
-                    {ActionsUI(this.props.phase)}
+                    {ActionsUI(this.props.action)}
                 </div>
             </div>
         );
@@ -82,7 +88,7 @@ class Game extends Component {
             let params = deparam(window.location.search);
             params.name = params['?name'];
             params['?name'] = undefined;
-            socket.emit('join', params, function(err) {
+            socket.emit('join', params, function(err, data) {
                 if(err) {
                     alert(err);
                     window.location.href = '/';
@@ -93,11 +99,8 @@ class Game extends Component {
             this.props.onNewMessage(message);
             scrollToBottom();
         });
-        socket.on('updateUserList', people => {
-            this.props.onUpdatePeople(people);
-        });
-        socket.on('updatePhase', phase => {
-            this.props.onUpdatePhase(phase);
+        socket.on('update', data => {
+            this.props.onUpdatePeople(data.userList);
         });
 
 

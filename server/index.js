@@ -27,6 +27,9 @@ io.on('connection', socket => {
 		if(!isRealString(data.name) || !isRealString(data.room)) {
 			return cb('Name and room are required');
 		}
+		if(data.name.length > 14) {
+			return cb('Name is too long.');
+		}
 		let game = store.getGame(data.room);
 		if(game && game.nameInUse(data.name)) {
 			let namedUser = game.players.find(user => user.name === data.name);
@@ -45,8 +48,10 @@ io.on('connection', socket => {
 		//Update clients
 		io.to(user.room).emit('update', {userList: user.game.getPlayerListClean()});
 		socket.emit('newMessage', generateMessage('Admin', "Welcome to the game!"));
+		let {name, id} = user;
+		socket.emit('userData', {name, id});
 		socket.broadcast.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has joined the game`));
-		cb();
+		cb(undefined, {name, id});
 	});
 
 	socket.on('createMessage', (message, cb) => {
@@ -259,13 +264,12 @@ io.on('connection', socket => {
 		io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has disconnected.  They have five minutes to reconnect.`));
 		setTimeout(() => {
 			let user = store.removeUser(socket.id);
-			io.to(user.room).emit('update', {userList: user.game.getPlayerListClean()});
+			if(user) {
+				io.to(user.room).emit('update', {userList: user.game.getPlayerListClean()});
+			}
 		}, 300000);
 	});
 
-	socket.on('store', () => {
-		socket.emit('storeUpdate', store);
-	})
 });
 
 
