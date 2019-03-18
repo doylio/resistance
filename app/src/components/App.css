@@ -54,6 +54,10 @@ html, body {
   padding: 10px;
 }
 
+.admin-message {
+  background: #ffc4c4;
+}
+
 .message__title {
   display:flex;
   margin-bottom: 0;

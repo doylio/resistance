@@ -3,7 +3,7 @@ import moment from 'moment';
 
 const Message = ({message}) => {
     return (
-        <li className="message">
+        <li className={message.from === 'Admin' ? "admin-message" : "message"}>
             <div className="message__title">
                 <h5>{message.from}</h5>
                 <span>{moment(message.createdAt).format('h:mm a')}</span>
